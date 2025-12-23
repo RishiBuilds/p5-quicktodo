@@ -363,11 +363,18 @@ li.completed .check-btn img {
   word-break: break-word;
   transition: all 0.2s;
   line-height: 1.5;
+  cursor: pointer;
+  border-radius: 6px;
 }
 
 li.completed .todo-text {
   text-decoration: line-through;
   color: var(--text-tertiary);
+}
+
+.todo-text:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 .actions {

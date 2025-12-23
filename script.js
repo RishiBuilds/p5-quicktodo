@@ -19,6 +19,10 @@ function loadData() {
     if (storedTheme === "light" || storedTheme === "dark") {
       theme = storedTheme;
     }
+    const storedFilter = localStorage.getItem("filter");
+    if (["all", "active", "completed"].includes(storedFilter)) {
+      filter = storedFilter;
+    }
   } catch (e) {
     console.warn("Could not load from localStorage:", e);
     todos = [];
@@ -36,6 +40,11 @@ function save() {
 function setTheme(t) {
   theme = t;
   document.body.setAttribute("data-theme", t);
+  const themeToggle = $("theme-toggle");
+  if (themeToggle) {
+    themeToggle.setAttribute("aria-pressed", String(t === "dark"));
+    themeToggle.setAttribute("aria-label", `Switch to ${t === "light" ? "dark" : "light"} mode`);
+  }
   try {
     localStorage.setItem("theme", t);
   } catch (e) {
@@ -86,6 +95,8 @@ function render() {
 
     const checkBtn = document.createElement("button");
     checkBtn.className = "check-btn";
+    checkBtn.setAttribute("aria-pressed", String(todo.completed));
+    checkBtn.setAttribute("aria-label", todo.completed ? "Mark as active" : "Mark as completed");
     checkBtn.onclick = () => toggle(realIndex);
     const checkImg = document.createElement("img");
     checkImg.src = "check.svg";
@@ -95,6 +106,17 @@ function render() {
     const text = document.createElement("span");
     text.className = "todo-text";
     text.textContent = todo.text;
+    text.tabIndex = 0;
+    text.setAttribute("role", "button");
+    text.setAttribute("aria-pressed", String(todo.completed));
+    text.title = todo.completed ? "Mark as active" : "Mark as completed";
+    text.onclick = () => toggle(realIndex);
+    text.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle(realIndex);
+      }
+    };
 
     const actions = document.createElement("div");
     actions.className = "actions";
@@ -205,10 +227,17 @@ function clearCompleted() {
 }
 
 function setFilter(f) {
+  const validFilters = ["all", "active", "completed"];
+  if (!validFilters.includes(f)) return;
   filter = f;
   $$(".filter-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.filter === f);
   });
+  try {
+    localStorage.setItem("filter", f);
+  } catch (e) {
+    console.warn("Could not save filter to localStorage:", e);
+  }
   render();
 }
 
@@ -259,7 +288,7 @@ function init() {
   }
 
   setTheme(theme);
-  render();
+  setFilter(filter);
 }
 
 if (document.readyState === "loading") {
